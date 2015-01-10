@@ -1,0 +1,109 @@
+[root]
+name = "legend_of_link"
+version = "0.0.1"
+dependencies = [
+ "html5ever 0.0.0 (git+https://github.com/servo/html5ever)",
+ "url 0.2.16 (git+https://github.com/servo/rust-url)",
+]
+
+[[package]]
+name = "gcc"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "html5ever"
+version = "0.0.0"
+source = "git+https://github.com/servo/html5ever#771e136a1fe2baec71cf489fcb4dd7bdaa091ea5"
+dependencies = [
+ "html5ever_macros 0.0.0 (git+https://github.com/servo/html5ever)",
+ "phf 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf_mac 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "string_cache 0.0.0 (git+https://github.com/servo/string-cache)",
+ "string_cache_macros 0.0.0 (git+https://github.com/servo/string-cache)",
+ "time 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "html5ever_macros"
+version = "0.0.0"
+source = "git+https://github.com/servo/html5ever#771e136a1fe2baec71cf489fcb4dd7bdaa091ea5"
+
+[[package]]
+name = "lazy_static"
+version = "0.1.6"
+source = "git+https://github.com/Kimundi/lazy-static.rs#31a7aa0176ecd70b4aab274a40d1e2cd78c1fbf8"
+
+[[package]]
+name = "matches"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "phf"
+version = "0.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "phf_shared 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "phf_mac"
+version = "0.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "phf_shared 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "phf_shared"
+version = "0.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "rustc-serialize"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "string_cache"
+version = "0.0.0"
+source = "git+https://github.com/servo/string-cache#c63f5640bc124daf77076167afcde88e9e3dc50e"
+dependencies = [
+ "lazy_static 0.1.6 (git+https://github.com/Kimundi/lazy-static.rs)",
+ "phf 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf_mac 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "string_cache_macros 0.0.0 (git+https://github.com/servo/string-cache)",
+ "xxhash 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "string_cache_macros"
+version = "0.0.0"
+source = "git+https://github.com/servo/string-cache#c63f5640bc124daf77076167afcde88e9e3dc50e"
+dependencies = [
+ "lazy_static 0.1.6 (git+https://github.com/Kimundi/lazy-static.rs)",
+]
+
+[[package]]
+name = "time"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "gcc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "url"
+version = "0.2.16"
+source = "git+https://github.com/servo/rust-url#1168a4de5de96d8ac57d096fd5de1f93f2b6c80c"
+dependencies = [
+ "matches 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "xxhash"
+version = "0.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
