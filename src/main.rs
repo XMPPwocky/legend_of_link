@@ -4,7 +4,7 @@ extern crate html5ever;
 extern crate url;
 
 use html5ever::sink::rcdom::RcDom;
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use std::error::FromError;
 use std::os;
 use std::path::Path;
@@ -24,20 +24,20 @@ fn main() {
     }
   };
   print_report(report);
+  println!("Done checking!");
 }
 
 fn print_report(mut r: CheckReport) {
   println!("Checked {} pages...", r.len());
   println!("Errors:");
-  for (url, report) in r.iter_mut() {
+  for (url, mut report) in r.into_iter() {
     use PageStatus::{Invalid, InProgress};
     match report.status {
       Invalid(ref err) => {
         match err {
           &CheckError::IoError(std::io::IoError { kind: std::io::IoErrorKind::FileNotFound, .. }) => {
             println!("    NOT FOUND {:?}", url.serialize());
-            report.references.dedup();
-            for reference in report.references.iter() {
+            for reference in report.references.into_iter() {
               println!("        - Referred to by {:?}", reference.serialize())
             }
           },
@@ -134,7 +134,13 @@ fn check(this: &Url, report: &mut CheckReport, urls_to_check: &mut Vec<Url>) -> 
     use std::collections::hash_map::Entry;
     match report.entry(url.clone()) {
       Entry::Occupied(mut o) => {
-        o.get_mut().references.push(this.clone());
+        let should_track_references = match o.get().status {
+          PageStatus::Valid => false,
+          _ => true
+        };
+        if should_track_references {
+          o.get_mut().references.push(this.clone());
+        }
       },
       Entry::Vacant(v) => {
         v.insert(PageCheckReport {
