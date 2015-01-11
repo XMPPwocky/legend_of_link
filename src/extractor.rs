@@ -1,35 +1,35 @@
-use html5ever::sink::rcdom::Handle;
-use html5ever::sink::common::Element;
+use html5ever::tokenizer::{TokenSink, Token};
+use html5ever::driver::{tokenize_to, one_input};
+use std::default::Default;
 
-pub fn extract_links(handle: &Handle, into: &mut Vec<String>) {
-  let node = handle.borrow();
-
-  
-  let mylink = match node.node {
-    Element(ref name, ref attrs) if name.local.as_slice() == "a" =>  {
-      attrs.iter()
-        .filter_map(|attr|
-                    if attr.name.local.as_slice() == "href" {
-                      Some(attr.value.clone())
-                    } else {
-                      None
-                    })
-      .last()
-    },
-    _ => None
-  }.into_iter();
-  
-  into.extend(mylink);
-
-  for child in node.children.iter() {
-    extract_links(child, into);
+struct LinkExtractor<'a> {
+  into: &'a mut Vec<String>
+}
+impl<'a> TokenSink for LinkExtractor<'a>  {
+  fn process_token(&mut self, token: Token) {
+    match token {
+      Token::TagToken(tag) => {
+        if tag.name.as_slice() == "a" {
+          self.into.extend(
+            tag.attrs.into_iter()
+            .filter(|attr| attr.name.local.as_slice() == "href")
+            .map(|attr| attr.value)
+            .take(1)
+            );
+        }
+      },
+      _ => ()
+    }
   }
+}
+pub fn extract_links(document: String, into: &mut Vec<String>) {
+  let linksink = LinkExtractor { into: into };
+
+  tokenize_to(linksink, one_input(document), Default::default());
 }
 
 #[test]
 fn extract_links_test() {
-  use html5ever::sink::rcdom::RcDom;
-  use html5ever::{parse, one_input};
   use std::default::Default;
   let contents = "
     <body>
@@ -38,8 +38,7 @@ fn extract_links_test() {
     <A HREF=\"capstest\">hi</a>
     </body>".to_string();
 
-  let dom: RcDom = parse(one_input(contents), Default::default());
   let mut links = Vec::new();
-  extract_links(&dom.document, &mut links);
+  extract_links(contents, &mut links);
   assert_eq!(links, vec!["test", "othertest", "capstest"]);
 }

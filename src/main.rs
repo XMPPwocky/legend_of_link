@@ -3,7 +3,6 @@
 extern crate html5ever;
 extern crate url;
 
-use html5ever::sink::rcdom::RcDom;
 use std::collections::HashMap;
 use std::error::FromError;
 use std::os;
@@ -136,10 +135,10 @@ fn check(this: &Url, report: &mut CheckReport, urls_to_check: &mut Vec<Url>) -> 
     url_to_path(this).map_err(|_| CheckError::BadPath)
     );
 
-  let dom = try!(read_and_parse_path(path));
+  let contents = try!(fetch_path(path));
 
   let mut links = Vec::new();
-  extractor::extract_links(&dom.document, &mut links);
+  extractor::extract_links(contents, &mut links);
 
   let mut urls = links.into_iter()
     .filter_map(|link| normalize_url(&link[], this).ok() );
@@ -186,12 +185,8 @@ fn url_to_path(url: &Url) -> Result<Path, ()> {
   }
 }
 
-fn read_and_parse_path(path: Path) -> Result<RcDom, CheckError> {
-  use std::default::Default;
+fn fetch_path(path: Path) -> Result<String, CheckError> {
   use std::io::File;
-  use html5ever::one_input;
-  use html5ever::parse;
 
-  let contents = try!(File::open(&path).read_to_string());
-  Ok(parse(one_input(contents), Default::default()))
+  Ok(try!(File::open(&path).read_to_string()))
 }
