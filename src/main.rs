@@ -80,7 +80,7 @@ fn check_root(url: Url) -> CheckReport {
 
     for url in urls_checking.drain() {
       use std::collections::hash_map::Entry;
-
+      
       let result = check(&url, &mut report, &mut urls_to_check);
       let status = match result { 
         Ok(()) => PageStatus::Valid,
@@ -88,8 +88,14 @@ fn check_root(url: Url) -> CheckReport {
       };
       match report.entry(url.clone()) {
         Entry::Occupied(mut o) => {
-          debug_assert_eq!(o.get().status, PageStatus::InProgress);
-          o.get_mut().status = status;
+          // note that the status here is not necessarily InProgress
+          // however, it is less expensive to do the checking twice
+          // than it is to actually check for duplicates.
+          let report = o.get_mut();
+          report.status = status;
+          if report.status == PageStatus::Valid {
+            report.references = Vec::new();
+          } 
         },
         Entry::Vacant(v) => {
           v.insert(PageCheckReport {
