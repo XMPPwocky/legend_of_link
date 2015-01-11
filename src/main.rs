@@ -23,17 +23,31 @@ fn main() {
       return;
     }
   };
-  print_report(report);
-  println!("Done checking!");
+
+  let all_valid = print_report(report);
+  if all_valid {
+    println!("Congratulations! No dead links were found!");
+    os::set_exit_status(0);
+  } else {
+    os::set_exit_status(1);
+  }
 }
 
-fn print_report(mut r: CheckReport) {
+// it's sort of ugly to have this return a bool
+// but the traversal is pretty expensive so can't do it twice
+// later we could generate a "report report" with higher level info
+// or prune out all the valid pages?
+fn print_report(r: CheckReport) -> bool {
+  let mut all_valid = true;
+
   println!("Checked {} pages...", r.len());
   println!("Errors:");
+
   for (url, mut report) in r.into_iter() {
     use PageStatus::{Invalid, InProgress};
     match report.status {
       Invalid(ref err) => {
+        all_valid = false;
         match err {
           &CheckError::IoError(std::io::IoError { kind: std::io::IoErrorKind::FileNotFound, .. }) => {
             println!("    NOT FOUND {:?}", url.serialize());
@@ -48,6 +62,8 @@ fn print_report(mut r: CheckReport) {
       _ => ()
     }
   }
+
+  all_valid
 }
 
 fn check_root(url: Url) -> CheckReport {
@@ -58,12 +74,10 @@ fn check_root(url: Url) -> CheckReport {
 
   urls_checking.push(url);
 
-  let mut last_info = 0;
   while urls_checking.len() > 0 {
-    if report.len() - last_info > 10 {
-      println!("{} {}", report.len(), urls_checking.len());
-      last_info = report.len()
-    }
+    println!("Checked {} pages, checking {}...",
+             report.len(),
+             urls_checking.len());
 
     for url in urls_checking.drain() {
       use std::collections::hash_map::Entry;
