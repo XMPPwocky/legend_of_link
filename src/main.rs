@@ -3,13 +3,14 @@
 extern crate html5ever;
 extern crate url;
 
+use fetch::FetchError;
 use std::collections::HashMap;
 use std::error::FromError;
 use std::os;
-use std::path::Path;
 use url::Url;
 
-mod extractor;
+mod extract;
+mod fetch;
 
 fn main() {
   let root = os::args().get(1)
@@ -47,14 +48,20 @@ fn print_report(r: CheckReport) -> bool {
     match report.status {
       Invalid(ref err) => {
         all_valid = false;
-        match err {
-          &CheckError::IoError(std::io::IoError { kind: std::io::IoErrorKind::FileNotFound, .. }) => {
+        match *err {
+          CheckError::FetchError(FetchError::NotFound) => {
             println!("    NOT FOUND {:?}", url.serialize());
-            for reference in report.references.into_iter() {
-              println!("        - Referred to by {:?}", reference.serialize())
-            }
           },
-          _ => ()
+          CheckError::FetchError(FetchError::IoError(ref e)) => {
+            println!("    IO FAILED {:?}: {:?}", url.serialize(), e);
+          },
+          CheckError::FetchError(FetchError::MalformedUrl) => {
+            // This currently gets generated on all non-file:// links.
+            continue;
+          }
+        }
+        for reference in report.references.into_iter() {
+          println!("        - Referred to by {:?}", reference.serialize())
         }
       },
       InProgress => unreachable!(),
@@ -127,24 +134,19 @@ type CheckReport = HashMap<Url, PageCheckReport>;
 
 #[derive(Show, PartialEq)]
 enum CheckError {
-  BadPath,
-  IoError(std::io::IoError),
+  FetchError(FetchError)
 }
-impl FromError<std::io::IoError> for CheckError {
-  fn from_error(err: std::io::IoError) -> CheckError {
-    CheckError::IoError(err)
+impl FromError<FetchError> for CheckError {
+  fn from_error(err: FetchError) -> CheckError {
+    CheckError::FetchError(err)
   }
 }
 
 fn check(this: &Url, report: &mut CheckReport, urls_to_check: &mut Vec<Url>) -> Result<(), CheckError> {
-  let path = try!(
-    url_to_path(this).map_err(|_| CheckError::BadPath)
-    );
-
-  let contents = try!(fetch_path(path));
+  let contents = try!(fetch::fetch_url(this));
 
   let mut links = Vec::new();
-  extractor::extract_links(contents, &mut links);
+  extract::extract_links(contents, &mut links);
 
   let mut urls = links.into_iter()
     .filter_map(|link| normalize_url(&link[], this).ok() );
@@ -183,16 +185,3 @@ fn normalize_url(url: &str, base: &Url) -> Result<Url, ()> {
   Ok(abs_url)
 }
 
-fn url_to_path(url: &Url) -> Result<Path, ()> {
-  if &url.scheme[] == "file" {
-    url.to_file_path()
-  } else {
-    Err(())
-  }
-}
-
-fn fetch_path(path: Path) -> Result<String, CheckError> {
-  use std::io::File;
-
-  Ok(try!(File::open(&path).read_to_string()))
-}
